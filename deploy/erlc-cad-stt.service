@@ -1,0 +1,14 @@
+[Unit]
+Description=ERLC CAD - faster-whisper STT sidecar
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/erlc-cad/stt-server
+ExecStart=/opt/erlc-cad/stt-server/.venv/bin/uvicorn server:app --host 127.0.0.1 --port 8077
+Restart=always
+RestartSec=5
+Environment=WHISPER_MODEL=small.en
+Environment=WHISPER_THREADS=4
+
+[Install]
+WantedBy=multi-user.target

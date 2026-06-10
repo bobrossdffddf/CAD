@@ -1,0 +1,13 @@
+[Unit]
+Description=ERLC CAD - Discord bot
+After=network.target erlc-cad-stt.service
+Wants=erlc-cad-stt.service
+
+[Service]
+WorkingDirectory=/opt/erlc-cad
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
