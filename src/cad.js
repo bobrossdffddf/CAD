@@ -51,6 +51,12 @@ export function execute(cmd, speakerDiscordId) {
       return { ok: true, summary: `BOLO **#${id}** issued: ${cmd.description}`, ack: `BOLO ${id} issued.` };
     }
 
+    case 'link': {
+      db.upsertUnit(cmd.callsign, { discord_id: speakerDiscordId });
+      db.logEvent('link', `${cmd.callsign} <- ${speakerDiscordId}`);
+      return { ok: true, summary: `Speaker linked to **${cmd.callsign}**`, ack: `${sayCallsign(cmd.callsign)}, you are linked.` };
+    }
+
     case 'unknown':
     default:
       return { ok: false, summary: `Heard but not understood: \`${cmd.text ?? ''}\``, ack: null };

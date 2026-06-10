@@ -115,10 +115,25 @@ client.on('interactionCreate', async (i) => {
   }
 });
 
+// Auto-join the dispatch voice channel on startup and never leave:
+// retries until the STT server is up, and re-attempts after any failure.
+async function autoJoin() {
+  try {
+    if (!(await sttHealthy())) throw new Error('STT server not ready yet');
+    const guild = await client.guilds.fetch(config.guildId);
+    await joinDispatch(guild);
+    console.log(`Listening in voice channel ${config.voiceChannelId} (TTS ${ttsEnabled ? 'on' : 'off'})`);
+  } catch (err) {
+    console.error('[voice] join failed, retrying in 15s:', err.message);
+    setTimeout(autoJoin, 15_000);
+  }
+}
+
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   dispatchChannel = await client.channels.fetch(config.dispatchChannelId).catch(() => null);
   if (!dispatchChannel) console.error('Could not fetch dispatch channel — check DISPATCH_CHANNEL_ID');
+  autoJoin();
 
   startErlcSync((ev) => {
     if (ev.type === 'join') post(embed('Player Joined', `**${ev.name}** joined the in-game server.`, 0x38a169));

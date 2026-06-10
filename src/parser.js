@@ -112,6 +112,11 @@ export function parse(raw) {
   if ((m = restStr.match(/^bolo (.+)$/)))
     return { type: 'bolo', description: m[1] };
 
+  if ((m = restStr.match(/^link me as (.+)$/))) {
+    const cs = readCallsign(m[1].split(' '));
+    if (cs) return { type: 'link', callsign: cs.callsign };
+  }
+
   // status forms
   const cs = readCallsign(rest);
   const afterCs = cs ? cs.rest : rest;
