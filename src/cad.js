@@ -20,7 +20,7 @@ export function execute(cmd, speakerDiscordId) {
       if (!db.getUnit(callsign).discord_id && speakerDiscordId) db.upsertUnit(callsign, { discord_id: speakerDiscordId });
       const label = TEN_CODES[cmd.code] ?? cmd.code;
       db.logEvent('status', `${callsign} -> ${cmd.code}`);
-      return { ok: true, summary: `**${callsign}** is now **${cmd.code}** (${label})`, ack: `${sayCallsign(callsign)}, copy ${sayCode(cmd.code)}.` };
+      return { ok: true, summary: `**${callsign}** is now **${cmd.code}** (${label})`, ack: `${sayCallsign(callsign)}, acknowledged, ${sayCode(cmd.code)}.` };
     }
 
     case 'new_call': {
