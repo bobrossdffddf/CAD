@@ -1,22 +1,30 @@
-// Polls the official ERLC private-server API and syncs in-game presence with CAD.
-// Docs: https://apidocs.policeroleplay.community  (key from your private server settings)
+// Polls the official ER:LC private-server API (v2) and syncs in-game presence with CAD.
+// Docs: https://apidocs.erlc.gg — requires the ERLC API server pack; key from in-game
+// Settings -> API key (or https://erlc.link/sk). Sent as the lowercase `server-key` header.
 
 import { config } from './config.js';
 import * as db from './db.js';
 
-const BASE = 'https://api.policeroleplay.community/v1';
+const BASE = 'https://api.erlc.gg/v2';
 let prevPlayers = null; // Set of player names from the previous poll
 
 async function api(path) {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Server-Key': config.erlcServerKey },
+    headers: { 'server-key': config.erlcServerKey },
     signal: AbortSignal.timeout(15_000),
   });
   if (res.status === 429) {
     const retry = Number(res.headers.get('retry-after') || 30);
     throw Object.assign(new Error('rate limited'), { retryAfter: retry });
   }
-  if (!res.ok) throw new Error(`ERLC API ${path} -> ${res.status}`);
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const body = await res.json();
+      detail = ` (code ${body.code ?? '?'}: ${body.message ?? body.error ?? 'see https://apidocs.erlc.gg/error-codes'})`;
+    } catch { /* no JSON body */ }
+    throw new Error(`ERLC API ${path} -> ${res.status}${detail}`);
+  }
   return res.json();
 }
 
@@ -29,7 +37,8 @@ export function startErlcSync(onEvent) {
 
   const tick = async () => {
     try {
-      const players = await api('/server/players'); // [{ Player: "Name:id", Team, Callsign?, Permission }]
+      const data = await api('/server?Players=true');
+      const players = data.Players ?? [];
       const current = new Set(players.map(p => String(p.Player).split(':')[0]));
 
       if (prevPlayers) {

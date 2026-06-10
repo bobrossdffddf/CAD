@@ -38,7 +38,10 @@ export function startListening(connection, onSegment) {
       const pcm = Buffer.concat(chunks);
       const durationMs = pcm.length / BYTES_PER_MS;
       if (durationMs >= config.minSegmentMs) {
+        console.log(`[voice] captured ${Math.round(durationMs)}ms of speech from user ${userId}`);
         onSegment({ userId, pcm, durationMs: Math.round(durationMs), startedAt, endedAt: Date.now() });
+      } else {
+        console.log(`[voice] discarded ${Math.round(durationMs)}ms segment from ${userId} (too short)`);
       }
     };
 

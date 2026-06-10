@@ -24,13 +24,15 @@ const embed = (title, desc, color = 0x2b6cb0) =>
 const sttQueue = new JobQueue(async (seg) => {
   const t0 = Date.now();
   const text = await transcribe(pcmToWav(seg.pcm));
-  if (!text) return;
+  if (!text) { console.log(`[stt] heard nothing usable from ${seg.userId} (${seg.durationMs}ms)`); return; }
 
   const member = await client.guilds.cache.get(config.guildId)?.members.fetch(seg.userId).catch(() => null);
   const who = member?.displayName ?? seg.userId;
+  console.log(`[stt] ${who}: "${text}"`);
 
   const cmd = parse(text);
-  if (!cmd) return; // no wake word — ignore chatter entirely
+  if (!cmd) { console.log(`[stt] ignored (no wake word "${config.wakeWord}")`); return; }
+  console.log(`[cad] parsed:`, JSON.stringify(cmd));
 
   const result = cad.execute(cmd, seg.userId);
   const latency = ((Date.now() - t0) / 1000).toFixed(1);
